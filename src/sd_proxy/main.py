@@ -22,7 +22,7 @@ class SDRedirect(BaseHTTPRequestHandler):
         self.end_headers()
         print("Begin parsing xml....")
         hostname, port = self.server.server_address
-        tree = change_icon_path(self.server.xmltv, hostname, port)
+        tree = change_icon_path(self.server.xmltv, self.server.hostname, port)
         print("Parsing done...")
         tree.write(self.wfile, xml_declaration=True, encoding="utf-8")
 
@@ -53,9 +53,10 @@ class SDRedirect(BaseHTTPRequestHandler):
 
 
 class SDProxy(ThreadingHTTPServer):
-    def __init__(self, server_address, username, password_hash, xmltv):
+    def __init__(self, server_address, hostname, username, password_hash, xmltv):
         super().__init__(server_address, SDRedirect)
         self.token = None
+        self.hostname = hostname
         self.username = username
         self.password_hash = password_hash
         self.xmltv = xmltv
@@ -81,8 +82,8 @@ class SDProxy(ThreadingHTTPServer):
 
 
 def run(*, hostname, port, username, password_hash, xmltv):
-    print("Starting server {}...".format(hostname))
-    SDProxy((hostname, port), username, password_hash, xmltv).serve_forever()
+    print(f"Starting server {hostname}...")
+    SDProxy(("", port), hostname, username, password_hash, xmltv).serve_forever()
 
 
 if __name__ == "__main__":
