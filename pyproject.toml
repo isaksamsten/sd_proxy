@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=58"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sd_proxy"
+authors = [{ name = "Isak Samsten", email = "isak@samsten.se" }]
+readme = "README.md"
+description = "Simple Proxy for Schedule Direct"
+dynamic = ["version"]
+license = { text = "BSD-3-Clause" }
+dependencies = ["requests>=0.8.3" ]
+classifiers = [
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: MacOS',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: POSIX',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: Implementation :: PyPy',
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "sd_proxy.__version__" }
+
+[project.scripts]
+numpydoc-lint = "sd_proxy.main:run"
+
