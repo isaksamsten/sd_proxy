@@ -70,6 +70,24 @@ class SDRedirect(BaseHTTPRequestHandler):
                     self.send_response(404)
                     self.end_headers()
 
+    def do_HEAD(self):
+        path = PurePosixPath(urlparse(self.path).path)
+        if len(path.parts) < 1:
+            self.send_response(404)
+            self.end_headers()
+        elif path.parts[1] == "xmltv":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/xml")
+            self.end_headers()
+        elif path.parts[1] == "image":
+            if len(path.parts) > 2:
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.end_headers()
+            else:
+                self.send_response("404")
+                self.end_headers()
+
     def do_GET(self):
         path = PurePosixPath(urlparse(self.path).path)
         if len(path.parts) < 1:
