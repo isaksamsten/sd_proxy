@@ -28,7 +28,7 @@ python -m sd_proxy --username=my_username --password-hash=sha1-hash-of-password 
 or, if you use docker:
 
 ```
-docker run --rm -it -p 8888:8888 -e USERNAME=my_username -e PASSWORD_HASH=sha1-hash-of-password -e XMLTV=path_to_xmltv.xml sd_proxy
+docker run --rm -it -p 8888:8888 -e USERNAME=my_username -e PASSWORD_HASH=sha1-hash-of-password -e XMLTV=/config/xmltv.xml -v ./config:/config sd_proxy
 ```
 
 ### Using the Proxy
@@ -50,4 +50,4 @@ http://ip.address:port/image/imagehash.jpg
 Using, e.g, `curl` or a browser, this URL redirects to
 `https://json.scheduledirect.org/...../imagehash.jpg?token=authentication_token`.
 
-The server authomatically creates a new authentication token every six hour.
+The server automatically creates a new authentication token every six hour.
