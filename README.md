@@ -47,7 +47,40 @@ The icons fields in the returned `xmltv`-file have been changed to:
 http://ip.address:port/image/imagehash.jpg
 ```
 
-Using, e.g, `curl` or a browser, this URL redirects to
+Using, e.g, `curl` or a browser, this URL downloads and caches the icon from 
 `https://json.scheduledirect.org/...../imagehash.jpg?token=authentication_token`.
 
-The server automatically creates a new authentication token every six hour.
+The server automatically creates a new authentication token every six hour or when
+the tracked `xmltv` file changes.
+
+## My setup
+
+I run `sd_proxy` using `docker-compose.yml`:
+
+```yaml
+---
+version: "3.8"
+services:
+
+  sd_proxy:
+    image: sd_proxy:latest
+    container_name: sd_proxy
+    network_mode: host
+    environment:
+      - HOSTNAME=192.168.1.54
+      - XMLTV=/xmltv/xmltv.xml
+      - USERNAME=my_username
+      - MAX_CACHE_AGE=43800
+      - PASSWORD_HASH=my_hash
+    volumes:
+      - ./config/sd-proxy:/config
+      - xmltv:/xmltv
+
+volumes:
+  xmltv:
+```
+
+Then I use `tv_grab_az_sdjson_sqlite` to generate the `xmltv` file, which is stored in
+the volume `xmltv`.
+
+
