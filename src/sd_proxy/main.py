@@ -10,18 +10,18 @@ import requests
 import threading
 import os
 import time
-
+import sys
 
 def clear_cache(dir, max_age):
     def f():
         while True:
             now = datetime.utcnow()
-            print("Clearing cache...")
+            print("Clearing cache...", file=sys.stderr)
             for file in Path(dir).glob("*.jpg"):
                 created_time = datetime.utcfromtimestamp(os.path.getmtime(file))
                 age = (now - created_time).seconds / 60
                 if age > max_age:
-                    print(f"Purging {file.name} from cache ({int(age)} minutes old)...")
+                    print(f"Purging {file.name} from cache ({int(age)} minutes old)...", file=sys.stderr)
                     file.unlink()
 
             # Sleep for at least max_age minutes.
@@ -42,19 +42,19 @@ class SDRedirect(BaseHTTPRequestHandler):
         dir.mkdir(exist_ok=True)
         cache = dir / Path(image)
         if cache.is_file():
-            print("Reading image from cache...")
+            print("Reading image from cache...", file=sys.stderr)
             self.send_response(200)
             self.send_header("Content-Type", "image/jpeg")
             self.end_headers()
             self.wfile.write(cache.open("rb").read())
         else:
-            print("Downloading image from schedulesdirect...")
+            print("Downloading image from schedulesdirect...", file=sys.stderr)
             token = self.server.get_auth_token()
             with requests.get(
                 f"https://json.schedulesdirect.org/20141201/image/{image}?token={token}",
                 stream=True,
             ) as remote:
-                if remote.status_code == 200:
+                if remote.status_code == 200 and "schedulesdirect-api20141201a" in remote.url :
                     self.send_response(200)
                     self.send_header("Content-Type", "image/jpeg")
                     self.end_headers()
@@ -67,6 +67,7 @@ class SDRedirect(BaseHTTPRequestHandler):
                         if cache.is_file():
                             cache.unlink()
                 else:
+                    print("Downloading failed...", file=sys.stderr)
                     self.send_response(404)
                     self.end_headers()
 
@@ -97,16 +98,16 @@ class SDRedirect(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/xml")
             self.end_headers()
-            print("Begin parsing xml....")
+            print("Begin parsing xml....", file=sys.stderr)
             hostname, port = self.server.server_address
             tree = change_icon_path(self.server.xmltv, self.server.hostname, port)
-            print("Parsing done...")
+            print("Parsing done...", file=sys.stderr)
             tree.write(self.wfile, xml_declaration=True, encoding="utf-8")
         elif path.parts[1] == "image":
             if len(path.parts) > 2:
                 self.send_file_from_cache_or_download(self.server.cache, path.parts[-1])
             else:
-                print("Malforemed image request...")
+                print("Malforemed image request...", file=sys.stderr)
                 self.send_response("404")
                 self.end_headers()
 
@@ -120,24 +121,40 @@ class SDProxy(ThreadingHTTPServer):
         self.password_hash = password_hash
         self.xmltv = xmltv
         self.cache = cache
+        self.lock = threading.Lock()
+
+    def invalidate_token(self):
+        self.lock.acquire()
+        self.token = None
+        self.lock.release()
+
+    def xmltv_last_changed(self):
+        time = datetime.utcfromtimestamp(os.path.getmtime(self.xmltv))
+        print(f"XMLTV was last generated {time}...", file=sys.stderr)
+        return time
 
     def get_auth_token(self):
+        self.lock.acquire()
         if (
             self.token is None
             or (datetime.utcnow() - self.token.issued).seconds > 6 * 3600
+            or self.token.issued < self.xmltv_last_changed()
         ):
-            print("Requesting authentication token...")
+            print("Requesting authentication token...", file=sys.stderr)
             response = requests.post(
                 "https://json.schedulesdirect.org/20141201/token",
                 json={"username": self.username, "password": self.password_hash},
             ).json()
-            print("Got authentication token...")
+            print("Got authentication token...", file=sys.stderr)
             token = response["token"] if response["code"] == 0 else None
             if token is None:
-                print("Failed to acquire authentication token...")
+                print("Failed to acquire authentication token...", file=sys.stderr)
 
             self.token = Token(token, datetime.utcnow())
+        else:
+            print("Token is still valid... (token `{}` issued at {})".format(self.token.token, self.token.issued), file=sys.stderr)
 
+        self.lock.release()
         return self.token.token
 
 

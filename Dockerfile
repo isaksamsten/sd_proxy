@@ -8,10 +8,10 @@ ENV XMLTV="/config/xmltv.xml"
 ENV CACHE="/config/cache"
 ENV MAX_CACHE_AGE="4320"
 
-COPY . /tmp/src
 RUN apt update && \
     apt install -y python3 python3-pip
 
+COPY . /tmp/src
 RUN pip install pip -U && pip install /tmp/src/
 
 WORKDIR /app
