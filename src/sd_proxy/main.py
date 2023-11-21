@@ -160,6 +160,8 @@ class SDProxy(ThreadingHTTPServer):
 
 def run(*, hostname, port, username, password_hash, xmltv, cache, max_cache_age):
     print(f"Starting server {hostname}...")
-    t = threading.Thread(target=clear_cache(cache, max_cache_age))
-    t.start()
+    if max_cache_age > 0:
+        t = threading.Thread(target=clear_cache(cache, max_cache_age))
+        t.start()
+
     SDProxy(("", port), hostname, username, password_hash, xmltv, cache).serve_forever()
