@@ -1,4 +1,4 @@
-if __name__ == "__main__":
+def runit():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -30,3 +30,6 @@ if __name__ == "__main__":
         cache=args.cache,
         max_cache_age=args.max_cache_age,
     )
+
+if __name__ == "__main__":
+    runit()

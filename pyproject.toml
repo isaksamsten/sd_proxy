@@ -26,5 +26,5 @@ classifiers = [
 version = { attr = "sd_proxy.__version__" }
 
 [project.scripts]
-sd_proxy = "sd_proxy.main:run"
+sd_proxy = "sd_proxy.__main__:runit"
 
