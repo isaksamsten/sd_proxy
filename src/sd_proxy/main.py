@@ -108,7 +108,7 @@ class SDRedirect(BaseHTTPRequestHandler):
                 self.send_file_from_cache_or_download(self.server.cache, path.parts[-1])
             else:
                 print("Malforemed image request...", file=sys.stderr)
-                self.send_response("404")
+                self.send_response(404)
                 self.end_headers()
 
 
